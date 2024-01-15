@@ -3,6 +3,7 @@ import { Canvas } from "@react-three/fiber";
 import { Leva } from "leva";
 import { Experience } from "./components/Experience";
 import { UI } from "./components/UI";
+import FileUpload from "./components/FileUpload";
 
 function App() {
 
@@ -10,7 +11,8 @@ function App() {
     <>
       <Loader />
       <Leva hidden />
-      <UI  />
+      {/* <UI  /> */}
+      <FileUpload/>
       <Canvas shadows camera={{ position: [0, 0, 1], fov: 30 }}>
         <Experience />
        

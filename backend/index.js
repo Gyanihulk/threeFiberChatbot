@@ -5,6 +5,11 @@ import voice from "elevenlabs-node";
 import express from "express";
 import { promises as fs } from "fs";
 import OpenAI from "openai";
+import multer from 'multer';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+
 dotenv.config();
 
 const openai = new OpenAI({
@@ -23,8 +28,47 @@ app.get("/", (req, res) => {
   res.send("Hello World!");
 });
 
-app.get("/voices", async (req, res) => {
-  res.send(await voice.getVoices(elevenLabsApiKey));
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    // Set destination folder for your files
+    cb(null, 'uploads/');
+  },
+  filename: function (req, file, cb) {
+    // Use the original file name
+    cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
+  }
+});
+
+
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const upload = multer({ storage: storage });
+
+app.post('/upload', upload.single('wavFile'), async (req, res) => {
+  // req.file is the 'wavFile' file
+  if (!req.file) {
+    return res.status(400).send('No file uploaded.');
+  }
+
+  const filename=req.file.filename.substring(0,req.file.filename.length-4)
+  console.log(filename)
+  let message={}
+  const file=`uploads/${filename}.mp3`
+  // File is saved in the destination folder with multer's help
+  // You can perform additional actions here if necessary
+  await lipSyncMessage2(filename);
+  message.audio = await audioFileToBase64(file);
+  message.lipsync = await readJsonTranscript(`uploads/${filename}.json`);
+  // message.lipsync = await readJsonTranscript(`uploads/wavFile-1705256299967.json`);
+  res.send(message);
+});
+
+
+app.get("/attend", async (req, res) => {
+  setTimeout(() => {
+    res.send("kaise ho me badiya!! aur btao? kuch tum btao ");
+  }, 3000);
+
 });
 
 function execCommand(command) {
@@ -41,6 +85,25 @@ function execCommand(command) {
     });
   });
 }
+
+const lipSyncMessage2 = async (filename) => {
+  const time = new Date().getTime();
+
+  console.log(`Starting conversion for filename ${filename}`);
+
+  // // Convert audio to WAV format
+  await execCommand(
+    `ffmpeg -y -i uploads\\${filename}.mp3 uploads\\${filename}.wav`
+  );
+
+  console.log(`Conversion done in ${new Date().getTime() - time}ms`);
+
+  await execCommand(
+    `.\\bin\\rhubarb.exe -f json -o uploads\\${filename}.json uploads\\${filename}.wav -r phonetic`
+  );
+
+  console.log(`Lip sync done in ${new Date().getTime() - time}ms`);
+};
 
 const lipSyncMessage = async (message) => {
   const time = new Date().getTime();
@@ -164,6 +227,8 @@ app.post("/chat", async (req, res) => {
 
   res.send({ messages });
 });
+
+
 
 const readJsonTranscript = async (file) => {
   const data = await fs.readFile(file, "utf8");

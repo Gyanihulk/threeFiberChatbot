@@ -55,7 +55,7 @@ export const Experience = () => {
       cameraControls.current.setLookAt(0, 2.2, 5, 0, 1.0, 0, true);
     }
   }, [cameraZoomed]);
-  const texture = useTexture("textures/1.jpg");
+  const texture = useTexture("textures/2.png");
   const viewport = useThree((state) => state.viewport);
   return (
     <>
@@ -68,7 +68,7 @@ export const Experience = () => {
       <Avatar />
       {/* <Avatar1/> */}
       <ContactShadows opacity={0.7} />
-      <mesh position-y={1.5} position-z={-1} scale-y={2} scale-x={4}>
+      <mesh position-y={1.5} position-z={-1} scale-y={10} scale-x={10}>
         <planeGeometry  />
         <meshBasicMaterial map={texture} />
       </mesh>
